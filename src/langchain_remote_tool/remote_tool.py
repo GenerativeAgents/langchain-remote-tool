@@ -61,34 +61,34 @@ class RemoteTool(BaseTool):
         if not self._client:
             raise RuntimeError("Client is not initialized")
 
-        # スキーマから操作情報を取得
+        # Get operation information from schema
         operation = self._get_first_operation()
         path = list(self._schema.get("paths", {}).keys())[0]
 
-        # リクエストボディのスキーマを取得
+        # Get request body schema
         request_body = operation.get("requestBody", {})
         content = request_body.get("content", {}).get("application/json", {})
         schema = content.get("schema", {})
 
-        # スキーマから必須パラメータと型情報を取得
+        # Get required parameters and type information from schema
         required = schema.get("required", [])
         properties = schema.get("properties", {})
 
-        # ペイロードの構築
+        # Build payload
         payload = {}
 
-        # スキーマに基づいてtool_inputを適切なパラメータに割り当て
+        # Assign tool_input to appropriate parameter based on schema
         if required and properties:
             first_required_param = required[0]
-            # プロパティの型情報を確認
+            # Check property type information
             param_schema = properties.get(first_required_param, {})
             if param_schema.get("type") == "string":
                 payload[first_required_param] = tool_input
 
-        # 追加のキーワード引数をマージ
+        # Merge additional keyword arguments
         payload.update(kwargs)
 
-        # リクエストの実行
+        # Execute request
         response = await self._client.post(path, json=payload)
         response.raise_for_status()
 
