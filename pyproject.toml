@@ -1,15 +1,24 @@
-[tool.poetry]
+[project]
 name = "langchain-remote-tool"
-version = "0.1.0"
-description = ""
-authors = ["Masahiro Nishimi <mah@edged-edge.jp>"]
+version = "0.0.1"
+authors = ["Masahiro Nishimi <498686+mahm@users.noreply.github.com>"]
+description = "Creating LangChain tools from OpenAPI schemas"
 readme = "README.md"
-packages = [{include = "langchain_remote_tool", from = "src"}]
+requires-python = ">=3.9,<4.0"
+dependencies = [
+    "httpx>=0.27.2",
+    "langchain-core>=0.3.15",
+    "pydantic>=2.9.2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+dev-dependencies = [
+    "black>=24.10.0",
+    "isort>=5.13.2",
+    "mypy>=1.13.0",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "respx>=0.21.1",
+    "ruff>=0.7.2",
+]
