@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 import httpx
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 
 class RemoteTool(BaseTool):
@@ -52,12 +52,8 @@ class RemoteTool(BaseTool):
                 return operation
         raise ValueError("No valid operation found")
 
-    def _run(self, *args, **kwargs) -> Any:
-        """Synchronous execution is not supported"""
-        raise NotImplementedError("RemoteTool only supports asynchronous execution")
-
-    async def _arun(self, tool_input: str, **kwargs) -> Any:
-        """Asynchronous execution of the tool"""
+    def _prepare_request(self, tool_input: str, **kwargs) -> tuple[str, dict]:
+        """Prepare request path and payload from schema and input"""
         if not self._client:
             raise RuntimeError("Client is not initialized")
 
@@ -88,8 +84,22 @@ class RemoteTool(BaseTool):
         # Merge additional keyword arguments
         payload.update(kwargs)
 
-        # Execute request
+        return path, payload
+
+    def _run(self, tool_input: str, **kwargs) -> Any:
+        """Synchronous execution of the tool"""
+        path, payload = self._prepare_request(tool_input, **kwargs)
+        response = httpx.post(
+            f"{self._client.base_url}{path}",
+            json=payload,
+            headers={"Authorization": f"Bearer {self.api_key}"},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def _arun(self, tool_input: str, **kwargs) -> Any:
+        """Asynchronous execution of the tool"""
+        path, payload = self._prepare_request(tool_input, **kwargs)
         response = await self._client.post(path, json=payload)
         response.raise_for_status()
-
         return response.json()

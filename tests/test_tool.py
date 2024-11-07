@@ -68,3 +68,21 @@ async def test_remote_tool_execution(mock_schema):
 
         result = await tool.arun("# Test")
         assert result["docxUrl"] == "https://example.com/doc.docx"
+
+
+def test_remote_tool_sync_execution(mock_schema):
+    with respx.mock() as mocker:
+        mocker.get(
+            "https://www.middleman-ai.com/api/v1/tools/md-to-docx/openapi.json"
+        ).respond(json=mock_schema)
+        mocker.post("/api/v1/tools/md-to-docx").respond(
+            json={"docxUrl": "https://example.com/doc.docx"}
+        )
+
+        tool = RemoteTool(
+            url="https://www.middleman-ai.com/api/v1/tools/md-to-docx/openapi.json",
+            api_key="test-key",
+        )
+
+        result = tool.run("# Test")
+        assert result["docxUrl"] == "https://example.com/doc.docx"
